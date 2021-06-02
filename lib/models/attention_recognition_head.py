@@ -108,7 +108,20 @@ class AttentionRecognitionHead(nn.Module):
       sequence_scores = scores.view(batch_size * beam_width, 1)
 
       # Update fields for next timestep
-      predecessors = (candidates / self.num_classes + pos_index.expand_as(candidates)).view(batch_size * beam_width, 1)
+      # print('DEBUG {} {}'.format('candidates', candidates))
+      # print('DEBUG {} {}'.format('num_classes', self.num_classes))
+      # print('DEBUG {} {}'.format('pos_index', pos_index))
+      # print('DEBUG {}'.format(pos_index.expand_as(candidates)))
+
+      predecessors = (candidates / self.num_classes + pos_index.expand_as(candidates)).view(batch_size * beam_width, 1).type(torch.int)
+      # predecessors = (candidates / self.num_classes + pos_index.expand_as(candidates)).view(batch_size * beam_width, 1)
+      # predecessors = (candidates + pos_index.expand_as(candidates)).view(batch_size * beam_width, 1)
+
+      # print('DEBUG {} {}'.format('type(state)', type(state)))
+      # print('DEBUG {} {}'.format('state shape', state.shape))
+      # print('DEBUG {} {}'.format('type(predecessors)', type(predecessors)))
+      # print('DEBUG {} {}'.format('predecessors', predecessors))
+
       state = state.index_select(1, predecessors.squeeze())
 
       # Update sequence socres and erase scores for <eos> symbol so that they aren't expanded
