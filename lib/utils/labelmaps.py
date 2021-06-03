@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
 import string
+import pickle
+
 
 from . import to_torch, to_numpy
 
@@ -9,13 +11,17 @@ def get_vocabulary(voc_type, EOS='EOS', PADDING='PADDING', UNKNOWN='UNKNOWN'):
   voc_type: str: one of 'LOWERCASE', 'ALLCASES', 'ALLCASES_SYMBOLS'
   '''
   voc = None
-  types = ['LOWERCASE', 'ALLCASES', 'ALLCASES_SYMBOLS']
+  types = ['LOWERCASE', 'ALLCASES', 'ALLCASES_SYMBOLS', 'JAPAN']
   if voc_type == 'LOWERCASE':
     voc = list(string.digits + string.ascii_lowercase)
   elif voc_type == 'ALLCASES':
     voc = list(string.digits + string.ascii_letters)
   elif voc_type == 'ALLCASES_SYMBOLS':
     voc = list(string.printable[:-6])
+  elif voc_type == 'JAPAN':
+    with open("/home/asilla/sonnh/OCR/data_japan/voc.pickle", "rb") as fp:   # Unpickling
+      lines = pickle.load(fp)
+    voc = list(lines)
   else:
     raise KeyError('voc_type must be one of "LOWERCASE", "ALLCASES", "ALLCASES_SYMBOLS"')
 
