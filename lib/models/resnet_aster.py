@@ -120,6 +120,7 @@ class ResNet_ASTER(nn.Module):
     cnn_feat = x5.squeeze(2) # [N, c, w]
     cnn_feat = cnn_feat.transpose(2, 1)
     if self.with_lstm:
+      self.rnn.flatten_parameters()
       rnn_feat, _ = self.rnn(cnn_feat)
       return rnn_feat
     else:
@@ -127,7 +128,9 @@ class ResNet_ASTER(nn.Module):
 
 
 if __name__ == "__main__":
-  x = torch.randn(3, 3, 32, 100)
-  net = ResNet_ASTER(use_self_attention=True, use_position_embedding=True)
+  x = torch.randn(100, 3, 32, 2000)
+  # net = ResNet_ASTER(use_self_attention=True, use_position_embedding=True)
+  net = ResNet_ASTER(with_lstm = True)
+
   encoder_feat = net(x)
   print(encoder_feat.size())

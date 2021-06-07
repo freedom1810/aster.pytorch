@@ -269,6 +269,8 @@ class DecoderUnit(nn.Module):
     context = torch.bmm(alpha.unsqueeze(1), x).squeeze(1)
     yProj = self.tgt_embedding(yPrev.long())
     # self.gru.flatten_parameters()
+
+    self.gru.flatten_parameters()
     output, state = self.gru(torch.cat([yProj, context], 1).unsqueeze(1), sPrev)
     output = output.squeeze(1)
 
