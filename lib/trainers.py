@@ -41,6 +41,7 @@ class BaseTrainer(object):
             evaluator=None, test_loader=None, eval_tfLogger=None,
             test_dataset=None, test_freq=1000):
 
+    self.iters = 0
     self.model.train()
 
     batch_time = AverageMeter()
@@ -87,7 +88,7 @@ class BaseTrainer(object):
       batch_time.update(time.time() - end)
       end = time.time()
 
-      if self.iters % print_freq == 0:
+      if self.iters % print_freq == 0 or self.iters % len(data_loader) == 0:
         print('[{}]\t'
               'Epoch: [{}][{}/{}]\t'
               'Time {:.3f} ({:.3f})\t'
@@ -131,14 +132,14 @@ class BaseTrainer(object):
           #   train_tfLogger.image_summary(tag, images, step)
 
       #====== evaluation ======#
-      if self.iters % test_freq == 0:
+      if self.iters % test_freq == 0 or self.iters % len(data_loader) == 0:
         # only symmetry branch
         if 'loss_rec' not in output_dict['losses']:
           is_best = True
           # self.best_res is alwarys equal to 1.0 
-          self.best_res = evaluator.evaluate(test_loader, step=self.iters, tfLogger=eval_tfLogger, dataset=test_dataset)
+          self.best_res = evaluator.evaluate(test_loader, step=self.iters, tfLogger=eval_tfLogger, dataset=test_dataset, print_freq=100)
         else:
-          res = evaluator.evaluate(test_loader, step=self.iters, tfLogger=eval_tfLogger, dataset=test_dataset)
+          res = evaluator.evaluate(test_loader, step=self.iters, tfLogger=eval_tfLogger, dataset=test_dataset, print_freq=100)
 
           if self.metric == 'accuracy':
             is_best = res > self.best_res
@@ -158,7 +159,7 @@ class BaseTrainer(object):
           'state_dict': self.model.module.state_dict(),
           'iters': self.iters,
           'best_res': self.best_res,
-        }, is_best, fpath=osp.join(self.logs_dir, 'checkpoint.pth.tar'))
+        }, is_best, fpath=osp.join(self.logs_dir, 'checkpoint_{}_{}.pth.tar'.format(epoch, self.iters)))
 
 
     # collect garbage (not work)
