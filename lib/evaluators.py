@@ -44,16 +44,19 @@ class BaseEvaluator(object):
       data_time.update(time.time() - end)
 
       input_dict = self._parse_data(inputs)
+      # print("evaluators input_dict['images'] {}".format(input_dict['images'].shape))
       output_dict = self._forward(input_dict)
+      # print(output_dict['output'])
 
       batch_size = input_dict['images'].size(0)
 
       total_loss_batch = 0.
       for k, loss in output_dict['losses'].items():
+        # print('k {} loss {}'.format(k, loss))
         loss = loss.mean(dim=0, keepdim=True)
         total_loss_batch += loss.item() * batch_size
 
-      images.append(input_dict['images'])
+      images.append(input_dict['images'].shape[0])  # nếu save image sẽ gây ra lỗi tràn bộ nhớ
       targets.append(input_dict['rec_targets'])
       losses.append(total_loss_batch)
       if global_args.evaluate_with_lexicon:
@@ -66,7 +69,7 @@ class BaseEvaluator(object):
       batch_time.update(time.time() - end)
       end = time.time()
 
-      if (i + 1) % print_freq == 0:
+      if (i + 1) % print_freq == 0 or (i + 1) % len(data_loader) == 0:
         print('[{}]\t'
               'Evaluation: [{}/{}]\t'
               'Time {:.3f} ({:.3f})\t'
@@ -77,11 +80,12 @@ class BaseEvaluator(object):
                       batch_time.val, batch_time.avg,
                       data_time.val, data_time.avg))
 
-    if not global_args.keep_ratio:
-      images = torch.cat(images)
-      num_samples = images.size(0)
-    else:
-      num_samples = sum([subimages.size(0) for subimages in images])
+    # if not global_args.keep_ratio:
+    #   images = torch.cat(images)
+    #   num_samples = images.size(0)
+    # else:
+    #   num_samples = sum([subimages.size(0) for subimages in images])
+    num_samples = sum(images)
     targets = torch.cat(targets)
     losses = np.sum(losses) / (1.0 * num_samples)
     for k, v in outputs.items():
@@ -99,6 +103,7 @@ class BaseEvaluator(object):
         eval_res = eval_res[0]
       else:
         eval_res = metrics_factory[self.metric](outputs['pred_rec'], targets, dataset)
+        print(outputs['pred_rec'])
         print('lexicon0: {0}: {1:.3f}'.format(self.metric, eval_res))
       pred_list, targ_list, score_list = RecPostProcess(outputs['pred_rec'], targets, outputs['pred_rec_score'], dataset)
 
@@ -112,10 +117,10 @@ class BaseEvaluator(object):
           tfLogger.scalar_summary(tag, value, step)
 
     #====== Visualization ======#
-    if vis_dir is not None:
-      # recognition_vis(images, outputs['pred_rec'], targets, score_list, dataset, vis_dir)
-      stn_vis(images, outputs['rectified_images'], outputs['ctrl_points'], outputs['pred_rec'],
-              targets, score_list, outputs['pred_score'] if 'pred_score' in outputs else None, dataset, vis_dir)
+    # if vis_dir is not None:
+    #   # recognition_vis(images, outputs['pred_rec'], targets, score_list, dataset, vis_dir)
+    #   stn_vis(images, outputs['rectified_images'], outputs['ctrl_points'], outputs['pred_rec'],
+    #           targets, score_list, outputs['pred_score'] if 'pred_score' in outputs else None, dataset, vis_dir)
     return eval_res
 
 
